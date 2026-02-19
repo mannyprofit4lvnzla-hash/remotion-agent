@@ -9,13 +9,10 @@ from typing import List
 
 from fastapi import FastAPI, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import requests
 import google.generativeai as genai
-from utils.google_drive import download_file_from_google_drive
-# We reuse the gemini generation logic if possible, or reimplement simply here.
-# Assuming we have the helper utils copied.
-
-from fastapi.staticfiles import StaticFiles
+from utils.google_drive import download_file_from_google_drive, download_folder_from_google_drive
 
 # --- Configuration ---
 BOT_TOKEN = os.environ.get("SECRET_BOT_TOKEN")
@@ -39,39 +36,6 @@ if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 else:
     print("WARNING: GEMINI_API_KEY not set")
-
-# --- Helper Functions ---
-# (Previous content same until process_video_flow)
-
-# ... [Inside process_video_flow loop] ...
-        
-        output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
-        output_path = os.path.join(VOL_PATH, output_filename)
-        
-        # Get current port for local URL
-        port = int(os.environ.get("PORT", 8000))
-        local_base_url = f"http://127.0.0.1:{port}"
-        
-        # Convert file paths to HTTP URLs for Remotion
-        video_http_url = f"{local_base_url}/tmp/{os.path.basename(source_video_path)}"
-        music_http_url = ""
-        if music_path:
-            music_filename = os.path.basename(music_path)
-            music_http_url = f"{local_base_url}/music/{music_filename}"
-
-        props = {
-            "videoUrl": video_http_url,
-            "videoStart": video_start,
-            "musicUrl": music_http_url,
-            "musicStart": music_start,
-            "quoteText": quote
-        }
-        
-        try:
-            print(f"Rendering video {i+1} with props: {props}")
-            render_remotion_video(output_path, props)
-            # ...
-
 
 # --- Helper Functions ---
 
@@ -103,7 +67,7 @@ async def generate_quotes(keyword: str, count: int = 3) -> List[str]:
         response = await model.generate_content_async(prompt)
         text = response.text
         # Clean up list format
-        lines = [line.strip().lstrip('- ').lstrip('1. ') for line in text.split('\n') if line.strip()]
+        lines = [line.strip().lstrip('- ').lstrip('1. ') for line in text.split('\\n') if line.strip()]
         return lines[:count]
     except Exception as e:
         print(f"Gemini error: {e}")
@@ -152,8 +116,17 @@ def render_remotion_video(output_path, props):
 
 # --- Main Logic ---
 
+async def import_music_flow(chat_id: int, url: str):
+    send_telegram_message(chat_id, "🎵 Iniciando importación de música (esto puede tardar)...")
+    try:
+        download_folder_from_google_drive(url, MUSIC_DIR)
+        count = len(glob.glob(os.path.join(MUSIC_DIR, "*")))
+        send_telegram_message(chat_id, f"✅ Importación completada. Ahora tienes {count} canciones.")
+    except Exception as e:
+        send_telegram_message(chat_id, f"❌ Error importando música: {e}")
+
 async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
-    send_telegram_message(chat_id, f"🚀 Iniciando proceso para '{keyword}'...\n1. Descargando video fuente...")
+    send_telegram_message(chat_id, f"🚀 Iniciando proceso para '{keyword}'...\\n1. Descargando video fuente...")
     
     # 1. Download Source Video
     timestamp = int(time.time())
@@ -208,7 +181,6 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
             # Convert to absolute path just in case
             music_path = os.path.abspath(music_path)
         
-        
         output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
         output_path = os.path.join(VOL_PATH, output_filename)
         
@@ -236,7 +208,7 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
             render_remotion_video(output_path, props)
             
             # Send result
-            send_telegram_video(chat_id, output_path, caption=f"✨ Opción {i+1}\nUnable: {quote}")
+            send_telegram_video(chat_id, output_path, caption=f"✨ Opción {i+1}\\nUnable: {quote}")
             
         except Exception as e:
             print(f"Render failed for {i+1}: {e}")
@@ -261,10 +233,10 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
     
     if command == "/start" or command == "/help":
         welcome_msg = (
-            "👋 **¡Hola! Soy tu Bot de Inspiración (Remotion v1)**\n\n"
-            "🎵 **Primero:** Importa tu música enviando:\n"
-            "`/importmusic https://drive.google.com/drive/folders/...`\n\n"
-            "🎥 **Luego:** Crea videos enviando un link y una palabra clave:\n"
+            "👋 **¡Hola! Soy tu Bot de Inspiración (Remotion v1)**\\n\\n"
+            "🎵 **Primero:** Importa tu música enviando:\\n"
+            "`/importmusic https://drive.google.com/drive/folders/...`\\n\\n"
+            "🎥 **Luego:** Crea videos enviando un link y una palabra clave:\\n"
             "`https://drive.google.com/file/d/... Motivación`"
         )
         send_telegram_message(chat_id, welcome_msg)
@@ -286,23 +258,8 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
 
 @app.post("/importmusic")
 async def import_music_endpoint(request: Request, background_tasks: BackgroundTasks):
-    # Hidden endpoint or triggered via typed command logic if we switch to parsing full updates
-    # For now, let's allow the user to send "/importmusic <link>" in the chat
-    # But since we use a simple webhook parser:
     pass 
     
-# We need to update webhook to handle commands better
-from utils.google_drive import download_folder_from_google_drive
-
-async def import_music_flow(chat_id: int, url: str):
-    send_telegram_message(chat_id, "🎵 Iniciando importación de música (esto puede tardar)...")
-    try:
-        download_folder_from_google_drive(url, MUSIC_DIR)
-        count = len(glob.glob(os.path.join(MUSIC_DIR, "*")))
-        send_telegram_message(chat_id, f"✅ Importación completada. Ahora tienes {count} canciones.")
-    except Exception as e:
-        send_telegram_message(chat_id, f"❌ Error importando música: {e}")
-
 @app.get("/health")
 def health():
     return {"status": "ok", "engine": "remotion"}
