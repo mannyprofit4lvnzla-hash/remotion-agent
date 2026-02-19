@@ -253,3 +253,8 @@ async def import_music_flow(chat_id: int, url: str):
 @app.get("/health")
 def health():
     return {"status": "ok", "engine": "remotion"}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
