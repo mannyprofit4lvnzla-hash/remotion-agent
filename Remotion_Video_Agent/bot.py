@@ -96,7 +96,14 @@ def render_remotion_video(output_path, props):
         output_path,
         f"--props={props_json}",
         "--log=verbose",
-        "--chromium-options=--no-sandbox --disable-dev-shm-usage --disable-gpu --disable-setuid-sandbox --no-first-run --no-zygote --single-process --disable-accelerated-2d-canvas"
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-setuid-sandbox",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process",
+        "--disable-accelerated-2d-canvas"
     ]
     
     print(f"Executing Remotion: {' '.join(cmd)}")
