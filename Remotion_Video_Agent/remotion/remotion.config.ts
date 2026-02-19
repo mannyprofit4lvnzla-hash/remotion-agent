@@ -3,4 +3,16 @@ import { Config } from '@remotion/cli/config';
 Config.setVideoImageFormat('jpeg');
 Config.setOverwriteOutput(true);
 Config.setDelayRenderTimeoutInSeconds(120);
-Config.setConcurrency(1); // To save memory on small instances
+Config.setConcurrency(1);
+Config.setPuppeteerOptions({
+    args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu',
+    ],
+});
