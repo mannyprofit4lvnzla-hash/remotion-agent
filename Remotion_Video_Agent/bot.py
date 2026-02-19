@@ -15,6 +15,8 @@ from utils.google_drive import download_file_from_google_drive
 # We reuse the gemini generation logic if possible, or reimplement simply here.
 # Assuming we have the helper utils copied.
 
+from fastapi.staticfiles import StaticFiles
+
 # --- Configuration ---
 BOT_TOKEN = os.environ.get("SECRET_BOT_TOKEN")
 GEMINI_API_KEY = os.environ.get("SECRET_GEMINI_API_KEY")
@@ -24,13 +26,52 @@ if WEBHOOK_URL and not WEBHOOK_URL.startswith("http"):
     
 VOL_PATH = "/tmp" # Working directory for downloads/renders
 MUSIC_DIR = os.path.join(os.getcwd(), "music")
+if not os.path.exists(MUSIC_DIR):
+    os.makedirs(MUSIC_DIR)
 
 app = FastAPI()
+
+# Mount static files to allow Remotion (Chromium) to access them via HTTP
+app.mount("/tmp", StaticFiles(directory=VOL_PATH), name="tmp")
+app.mount("/music", StaticFiles(directory=MUSIC_DIR), name="music")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 else:
     print("WARNING: GEMINI_API_KEY not set")
+
+# --- Helper Functions ---
+# (Previous content same until process_video_flow)
+
+# ... [Inside process_video_flow loop] ...
+        
+        output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
+        output_path = os.path.join(VOL_PATH, output_filename)
+        
+        # Get current port for local URL
+        port = int(os.environ.get("PORT", 8000))
+        local_base_url = f"http://127.0.0.1:{port}"
+        
+        # Convert file paths to HTTP URLs for Remotion
+        video_http_url = f"{local_base_url}/tmp/{os.path.basename(source_video_path)}"
+        music_http_url = ""
+        if music_path:
+            music_filename = os.path.basename(music_path)
+            music_http_url = f"{local_base_url}/music/{music_filename}"
+
+        props = {
+            "videoUrl": video_http_url,
+            "videoStart": video_start,
+            "musicUrl": music_http_url,
+            "musicStart": music_start,
+            "quoteText": quote
+        }
+        
+        try:
+            print(f"Rendering video {i+1} with props: {props}")
+            render_remotion_video(output_path, props)
+            # ...
+
 
 # --- Helper Functions ---
 
@@ -170,10 +211,21 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
         output_path = os.path.join(VOL_PATH, output_filename)
         
+        # Get current port for local URL
+        port = int(os.environ.get("PORT", 8000))
+        local_base_url = f"http://127.0.0.1:{port}"
+        
+        # Convert file paths to HTTP URLs for Remotion
+        video_http_url = f"{local_base_url}/tmp/{os.path.basename(source_video_path)}"
+        music_http_url = ""
+        if music_path:
+            music_filename = os.path.basename(music_path)
+            music_http_url = f"{local_base_url}/music/{music_filename}"
+        
         props = {
-            "videoUrl": f"file://{os.path.abspath(source_video_path)}", # Local file protocol
+            "videoUrl": video_http_url,
             "videoStart": video_start,
-            "musicUrl": f"file://{music_path}" if music_path else "",
+            "musicUrl": music_http_url,
             "musicStart": music_start,
             "quoteText": quote
         }
