@@ -206,6 +206,17 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
     parts = text.split(maxsplit=1)
     command = parts[0]
     
+    if command == "/start" or command == "/help":
+        welcome_msg = (
+            "👋 **¡Hola! Soy tu Bot de Inspiración (Remotion v1)**\n\n"
+            "🎵 **Primero:** Importa tu música enviando:\n"
+            "`/importmusic https://drive.google.com/drive/folders/...`\n\n"
+            "🎥 **Luego:** Crea videos enviando un link y una palabra clave:\n"
+            "`https://drive.google.com/file/d/... Motivación`"
+        )
+        send_telegram_message(chat_id, welcome_msg)
+        return JSONResponse({"status": "welcome_sent"})
+
     if command == "/importmusic" and len(parts) > 1:
         url = parts[1]
         background_tasks.add_task(import_music_flow, chat_id, url)
