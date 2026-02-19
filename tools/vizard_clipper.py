@@ -98,11 +98,17 @@ def submit_to_vizard(api_key: str, youtube_url: str, max_clips: int = None) -> d
     template_id = os.environ.get("VIZARD_TEMPLATE_ID")
     lang = os.environ.get("VIZARD_LANG", "es")
 
+    # Subtitles: Default to 0 (off) per user request
+    # Set VIZARD_SUBTITLES="1" or "true" to enable them
+    subtitles_env = os.environ.get("VIZARD_SUBTITLES", "0")
+    subtitle_switch = 1 if subtitles_env.lower() in ("1", "true", "on") else 0
+
     payload = {
         "videoUrl": youtube_url,
         "videoType": 2,          # 2 = YouTube
         "lang": lang,
         "ratioOfClip": 1,        # 1 = 9:16 (Vertical) for Reels/Shorts
+        "subtitleSwitch": subtitle_switch,
     }
     if template_id:
         payload["templateId"] = int(template_id)

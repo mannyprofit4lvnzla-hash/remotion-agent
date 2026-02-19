@@ -95,9 +95,13 @@ def render_remotion_video(output_path, props):
         "MyComposition",
         output_path,
         f"--props={props_json}",
-        "--log=verbose",
-        "--browser-executable=/usr/bin/chromium-wrapper"
+        "--log=verbose"
     ]
+    
+    # Check for specific browser executable (e.g., in Docker)
+    browser_executable = "/usr/bin/chromium-wrapper"
+    if os.path.exists(browser_executable):
+        cmd.append(f"--browser-executable={browser_executable}")
     
     print(f"Executing Remotion: {' '.join(cmd)}")
     result = subprocess.run(
