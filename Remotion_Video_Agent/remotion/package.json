@@ -12,7 +12,8 @@
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
         "@remotion/cli": "4.0.125",
-        "@remotion/google-fonts": "^4.0.125"
+        "@remotion/google-fonts": "^4.0.125",
+        "zod": "^3.22.4"
     },
     "devDependencies": {
         "@types/react": "^18.0.0",
