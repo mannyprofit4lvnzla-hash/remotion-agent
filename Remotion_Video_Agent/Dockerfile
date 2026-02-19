@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y chromium \
 
 # Set env var so Remotion knows where Chromium is (optional but helpful)
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # 4. Set Up Application Directory
 WORKDIR /app

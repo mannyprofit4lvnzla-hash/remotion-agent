@@ -108,8 +108,10 @@ def render_remotion_video(output_path, props):
     )
     
     if result.returncode != 0:
-        print(f"Remotion Error: {result.stderr}")
-        raise Exception(f"Remotion failed: {result.stderr[-200:]}")
+        full_error = f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+        print(f"Remotion Error Details:\n{full_error}")
+        # Return last 1000 chars to Telegram to capture more context
+        raise Exception(f"Remotion failed: {result.stderr[-1000:]}")
     
     print("Remotion render success!")
     return output_path
