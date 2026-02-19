@@ -28,8 +28,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 RUN apt-get update && apt-get install -y chromium \
     && rm -rf /var/lib/apt/lists/*
 
-# Set env var so Remotion knows where Chromium is (optional but helpful)
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# Create a wrapper for Chromium to force flags
+run echo '#!/bin/bash\nexec /usr/bin/chromium --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --disable-setuid-sandbox "$@"' > /usr/bin/chromium-wrapper && \
+    chmod +x /usr/bin/chromium-wrapper
+
+# Set env var so Remotion uses our wrapper
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-wrapper
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # 4. Set Up Application Directory
