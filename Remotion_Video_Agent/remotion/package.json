@@ -8,11 +8,11 @@
         "test": "eslint src --ext ts,tsx && tsc"
     },
     "dependencies": {
-        "remotion": "^4.0.0",
+        "remotion": "latest",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
-        "@remotion/cli": "^4.0.0",
-        "@remotion/google-fonts": "^4.0.0",
+        "@remotion/cli": "latest",
+        "@remotion/google-fonts": "latest",
         "zod": "^3.22.4"
     },
     "devDependencies": {
