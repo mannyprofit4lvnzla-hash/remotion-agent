@@ -95,7 +95,8 @@ def render_remotion_video(output_path, props):
         "MyComposition",
         output_path,
         f"--props={props_json}",
-        "--log=verbose"
+        "--log=verbose",
+        "--browser-executable=/usr/bin/chromium-wrapper"
     ]
     
     print(f"Executing Remotion: {' '.join(cmd)}")
