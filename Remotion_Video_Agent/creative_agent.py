@@ -151,7 +151,16 @@ async def generate_ai_video_kie(prompt: str, image_url: str = None) -> str:
                     
         raise Exception("Timeout waiting for video generation")
 
-async def process_hybrid_creative_flow(chat_id: int, keyword: str, send_msg_func, send_vid_func, render_remotion_func, vol_path: str, bot_url: str, music_dir: str, image_path: str = None):
+async def process_hybrid_creative_flow(
+    chat_id: int,
+    keyword: str,
+    send_msg_func,
+    send_vid_func: Callable,
+    render_remotion_func: Callable,
+    vol_path: str,
+    music_dir: str,
+    image_path: str = None
+):
     """
     Hybrid Creative Engine:
     1. Generates 1 quote.
@@ -250,24 +259,31 @@ async def process_hybrid_creative_flow(chat_id: int, keyword: str, send_msg_func
             output_filename = f"creative_out_{chat_id}_{timestamp}_{i+1}.mp4"
             output_path = os.path.join(vol_path, output_filename)
             
-            # Prepare Background Video URL
-            video_http_url = f"{bot_url}/tmp/{os.path.basename(bg_video_paths[i])}"
+            import shutil
+            remotion_public_dir = os.path.join(os.getcwd(), "remotion", "public")
+            os.makedirs(remotion_public_dir, exist_ok=True)
+            
+            # Prepare Background Video URL securely avoiding HTTP
+            video_filename = os.path.basename(bg_video_paths[i])
+            shutil.copy(bg_video_paths[i], os.path.join(remotion_public_dir, video_filename))
+            video_local_url = video_filename
             video_start = 0 
             
-            # Prepare Music URL & Random Start
+            # Prepare Music URL & Random Start securely avoiding HTTP
             music_path = selected_musics[i]
-            music_http_url = ""
+            music_local_url = ""
             music_start = 0
             if music_path:
                 music_dur = get_video_duration(music_path)
                 music_start = random.uniform(0, max(0, music_dur - 10))
                 music_filename = os.path.basename(music_path)
-                music_http_url = f"{bot_url}/music/{music_filename}"
+                shutil.copy(music_path, os.path.join(remotion_public_dir, music_filename))
+                music_local_url = music_filename
             
             props = {
-                "videoUrl": video_http_url,
+                "videoUrl": video_local_url,
                 "videoStart": video_start,
-                "musicUrl": music_http_url,
+                "musicUrl": music_local_url,
                 "musicStart": music_start,
                 "quoteText": quotes[i]
             }

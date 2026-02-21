@@ -207,13 +207,24 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
             # Convert to absolute path just in case
             music_path = os.path.abspath(music_path)
         
+        import shutil
+        remotion_public_dir = os.path.join(os.getcwd(), "remotion", "public")
+        os.makedirs(remotion_public_dir, exist_ok=True)
+        
         output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
         output_path = os.path.join(VOL_PATH, output_filename)
-        # Convert file paths to local `file://` URLs for Remotion to read directly from disk
-        video_local_url = f"file://{os.path.abspath(source_video_path)}"
+        
+        # Copy files to Remotion's public folder to bypass Chromium cross-origin and file:// security blocks
+        video_filename = os.path.basename(source_video_path)
+        shutil.copy(source_video_path, os.path.join(remotion_public_dir, video_filename))
+        video_local_url = video_filename
+        
         music_local_url = ""
         if music_path:
-            music_local_url = f"file://{os.path.abspath(music_path)}"
+            music_filename = os.path.basename(music_path)
+            # Copy to public folder
+            shutil.copy(music_path, os.path.join(remotion_public_dir, music_filename))
+            music_local_url = music_filename
         
         props = {
             "videoUrl": video_local_url,
