@@ -8,18 +8,18 @@
         "test": "eslint src --ext ts,tsx && tsc"
     },
     "dependencies": {
-        "remotion": "latest",
+        "@remotion/cli": "^4.0.222",
+        "@remotion/google-fonts": "^4.0.222",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
-        "@remotion/cli": "latest",
-        "@remotion/google-fonts": "latest",
+        "remotion": "^4.0.222",
         "zod": "^3.22.4"
     },
     "devDependencies": {
         "@types/react": "^18.0.0",
         "@types/web": "^0.0.122",
-        "typescript": "^5.3.3",
         "eslint": "^8.56.0",
-        "eslint-plugin-react": "^7.33.2"
+        "eslint-plugin-react": "^7.33.2",
+        "typescript": "^5.3.3"
     }
 }

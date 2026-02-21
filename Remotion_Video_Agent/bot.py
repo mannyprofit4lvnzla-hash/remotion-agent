@@ -111,6 +111,8 @@ def render_remotion_video(output_path, props):
         "MyComposition",
         output_path,
         f"--props={props_json}",
+        "--chromium-disable-web-security",
+        "--chromium-ignore-certificate-errors",
         "--log=verbose"
     ]
     
