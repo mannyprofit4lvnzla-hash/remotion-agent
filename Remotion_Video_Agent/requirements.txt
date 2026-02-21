@@ -9,3 +9,4 @@ httpx
 gdown
 python-multipart
 aiohttp
+yt-dlp
