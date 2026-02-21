@@ -113,6 +113,8 @@ def render_remotion_video(output_path, props):
         f"--props={props_json}",
         "--chromium-disable-web-security",
         "--chromium-ignore-certificate-errors",
+        "--chromium-disable-audio-output", 
+        "--chromium-disable-software-rasterizer",
         "--log=verbose"
     ]
     
