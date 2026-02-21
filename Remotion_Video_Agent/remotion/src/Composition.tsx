@@ -29,7 +29,7 @@ export const MyComposition: React.FC<z.infer<typeof myCompSchema>> = ({
             {/* 1. Background Video */}
             {videoUrl && (
                 <Video
-                    src={"/" + videoUrl}
+                    src={staticFile(videoUrl)}
                     startFrom={Math.round(videoStart * fps)} // Convert seconds to frames
                     endAt={Math.round((videoStart * fps) + durationInFrames)} // Ensure 10s duration
                     style={{
@@ -81,7 +81,7 @@ export const MyComposition: React.FC<z.infer<typeof myCompSchema>> = ({
             {/* 4. Background Music */}
             {musicUrl && (
                 <Audio
-                    src={"/" + musicUrl}
+                    src={staticFile(musicUrl)}
                     startFrom={Math.round(musicStart * fps)}
                     volume={0.8}
                     onError={(e) => {
