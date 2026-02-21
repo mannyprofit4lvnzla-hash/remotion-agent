@@ -11,7 +11,7 @@ from fastapi import FastAPI, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import requests
-import google.generativeai as genai
+from google import genai
 from utils.google_drive import download_file_from_google_drive, download_folder_from_google_drive
 import creative_agent
 
