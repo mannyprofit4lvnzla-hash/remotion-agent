@@ -209,26 +209,16 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         
         output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
         output_path = os.path.join(VOL_PATH, output_filename)
-        
-        # Get current port or public domain for local URL
-        port = int(os.environ.get("PORT", 8000))
-        public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
-        if public_domain:
-            local_base_url = f"https://{public_domain}"
-        else:
-            local_base_url = f"http://127.0.0.1:{port}"
-        
-        # Convert file paths to HTTP URLs for Remotion
-        video_http_url = f"{local_base_url}/tmp/{os.path.basename(source_video_path)}"
-        music_http_url = ""
+        # Convert file paths to local `file://` URLs for Remotion to read directly from disk
+        video_local_url = f"file://{os.path.abspath(source_video_path)}"
+        music_local_url = ""
         if music_path:
-            music_filename = os.path.basename(music_path)
-            music_http_url = f"{local_base_url}/music/{music_filename}"
+            music_local_url = f"file://{os.path.abspath(music_path)}"
         
         props = {
-            "videoUrl": video_http_url,
+            "videoUrl": video_local_url,
             "videoStart": video_start,
-            "musicUrl": music_http_url,
+            "musicUrl": music_local_url,
             "musicStart": music_start,
             "quoteText": quote
         }
@@ -271,13 +261,6 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
         try:
             download_telegram_photo(file_id, image_path)
             
-            port = int(os.environ.get("PORT", 8000))
-            public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
-            if public_domain:
-                local_base_url = f"https://{public_domain}"
-            else:
-                local_base_url = f"http://127.0.0.1:{port}"
-            
             background_tasks.add_task(
                 creative_agent.process_hybrid_creative_flow,
                 chat_id=chat_id,
@@ -286,7 +269,6 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
                 send_vid_func=send_telegram_video,
                 render_remotion_func=render_remotion_video,
                 vol_path=VOL_PATH,
-                bot_url=local_base_url,
                 music_dir=MUSIC_DIR,
                 image_path=image_path
             )
@@ -317,14 +299,6 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
     if command == "/create_ai_video" and len(parts) > 1:
         quote = parts[1]
         
-        # Local base URL for remotion to access the downloaded BG
-        port = int(os.environ.get("PORT", 8000))
-        public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
-        if public_domain:
-            local_base_url = f"https://{public_domain}"
-        else:
-            local_base_url = f"http://127.0.0.1:{port}"
-        
         background_tasks.add_task(
             creative_agent.process_hybrid_creative_flow,
             chat_id=chat_id,
@@ -333,7 +307,6 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
             send_vid_func=send_telegram_video,
             render_remotion_func=render_remotion_video,
             vol_path=VOL_PATH,
-            bot_url=local_base_url,
             music_dir=MUSIC_DIR
         )
         return JSONResponse({"status": "creative_engine_processing"})
