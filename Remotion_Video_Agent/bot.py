@@ -168,9 +168,12 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
     send_telegram_message(chat_id, "2. Generando frases y seleccionando música...")
     quotes = await generate_quotes(keyword, count=3)
     
-    music_files = glob.glob(os.path.join(MUSIC_DIR, "*.mp3"))
+    music_files = []
+    for ext in ("*.mp3", "*.wav", "*.m4a", "*.aac", "*.flac"):
+        music_files.extend(glob.glob(os.path.join(MUSIC_DIR, ext)))
+        
     if not music_files:
-        print("No music files found! Please add .mp3 files to music/ directory.")
+        print("No music files found! Please add audio files to music/ directory.")
         send_telegram_message(chat_id, "⚠️ No hay música en la librería. Usando modo silencio.")
         # Create dummy music list to prevent crash
         selected_musics = [None] * 3
@@ -207,9 +210,13 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
         output_path = os.path.join(VOL_PATH, output_filename)
         
-        # Get current port for local URL
+        # Get current port or public domain for local URL
         port = int(os.environ.get("PORT", 8000))
-        local_base_url = f"http://127.0.0.1:{port}"
+        public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+        if public_domain:
+            local_base_url = f"https://{public_domain}"
+        else:
+            local_base_url = f"http://127.0.0.1:{port}"
         
         # Convert file paths to HTTP URLs for Remotion
         video_http_url = f"{local_base_url}/tmp/{os.path.basename(source_video_path)}"
@@ -265,7 +272,11 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
             download_telegram_photo(file_id, image_path)
             
             port = int(os.environ.get("PORT", 8000))
-            local_base_url = f"http://127.0.0.1:{port}"
+            public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+            if public_domain:
+                local_base_url = f"https://{public_domain}"
+            else:
+                local_base_url = f"http://127.0.0.1:{port}"
             
             background_tasks.add_task(
                 creative_agent.process_hybrid_creative_flow,
@@ -308,7 +319,11 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
         
         # Local base URL for remotion to access the downloaded BG
         port = int(os.environ.get("PORT", 8000))
-        local_base_url = f"http://127.0.0.1:{port}"
+        public_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+        if public_domain:
+            local_base_url = f"https://{public_domain}"
+        else:
+            local_base_url = f"http://127.0.0.1:{port}"
         
         background_tasks.add_task(
             creative_agent.process_hybrid_creative_flow,

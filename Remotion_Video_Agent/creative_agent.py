@@ -221,7 +221,10 @@ async def process_hybrid_creative_flow(chat_id: int, keyword: str, send_msg_func
                         raise Exception(f"Failed to download background video {i}")
 
         # Step 5: Assign Music
-        music_files = glob.glob(os.path.join(music_dir, "*.mp3"))
+        music_files = []
+        for ext in ("*.mp3", "*.wav", "*.m4a", "*.aac", "*.flac"):
+            music_files.extend(glob.glob(os.path.join(music_dir, ext)))
+            
         selected_musics = [None] * num_videos
         if music_files:
             if len(music_files) >= num_videos:

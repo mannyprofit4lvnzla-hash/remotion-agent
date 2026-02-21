@@ -16,7 +16,7 @@ def download_file_from_google_drive(url: str, output_path: str):
         print(f"gdown failed with error: {e}. Trying yt-dlp fallback...")
         import subprocess
         # yt-dlp is extremely robust against Google rate limits and permission bugs
-        cmd = ["yt-dlp", "-o", output_path, url]
+        cmd = ["yt-dlp", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "--merge-output-format", "mp4", "-o", output_path, url]
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if result.returncode != 0:
             raise Exception(f"yt-dlp fallback failed: {result.stderr}")
