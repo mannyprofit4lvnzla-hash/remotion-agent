@@ -1,18 +1,18 @@
-import google.generativeai as genai
+from google import genai
 import os
 
 # Configure Gemini if env var is present, otherwise caller must configure
 api_key = os.environ.get("SECRET_GEMINI_API_KEY")
 if api_key:
-    genai.configure(api_key=api_key)
+    gemini_client = genai.Client(api_key=api_key)
+else:
+    gemini_client = None
 
 def generate_quotes(keyword: str, count: int = 3) -> list[str]:
     """
     Generates 'count' short inspirational quotes in Spanish based on 'keyword'.
     Returns a list of strings.
     """
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
     prompt = (
         f"Genera {count} frases inspiradoras y profundas en ESPAÑOL sobre el tema: '{keyword}'. "
         "Cada frase debe ser única, tener un tono motivacional y solemne. "
@@ -21,7 +21,13 @@ def generate_quotes(keyword: str, count: int = 3) -> list[str]:
     )
 
     try:
-        response = model.generate_content(prompt)
+        if gemini_client is None:
+            raise ValueError("Gemini Client not initialized")
+        
+        response = gemini_client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt,
+        )
         text = response.text.strip()
         
         # Split by the separator we asked for
