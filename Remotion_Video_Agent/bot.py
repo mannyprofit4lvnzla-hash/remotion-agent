@@ -76,7 +76,7 @@ async def generate_quotes(keyword: str, count: int = 3) -> List[str]:
     # Simple direct generation
     prompt = f"Genera {count} frases inspiradoras cortas (máximo 15 palabras) en español sobre el tema: '{keyword}'. Devuélvelas en formato de lista plana, una por línea."
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = await model.generate_content_async(prompt)
         text = response.text
         # Clean up list format

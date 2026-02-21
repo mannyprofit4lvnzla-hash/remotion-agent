@@ -171,7 +171,7 @@ async def process_hybrid_creative_flow(chat_id: int, keyword: str, send_msg_func
     
     try:
         # Step 1: Generate Quotes
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         quote_prompt = f"Genera {num_videos} frase inspiradora corta (máximo 15 palabras) en español sobre el tema: '{keyword}'. Devuélvela sola, sin comillas."
         quote_resp = await model.generate_content_async(quote_prompt)
         quotes = [line.strip().lstrip('- ').lstrip('1. ') for line in quote_resp.text.split('\\n') if line.strip()][:num_videos]
