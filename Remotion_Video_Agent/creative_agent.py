@@ -155,8 +155,8 @@ async def process_hybrid_creative_flow(
     chat_id: int,
     keyword: str,
     send_msg_func,
-    send_vid_func: Callable,
-    render_remotion_func: Callable,
+    send_vid_func,
+    render_remotion_func,
     vol_path: str,
     music_dir: str,
     image_path: str = None
