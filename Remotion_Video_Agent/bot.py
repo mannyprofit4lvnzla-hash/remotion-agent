@@ -34,8 +34,9 @@ app.mount("/tmp", StaticFiles(directory=VOL_PATH), name="tmp")
 app.mount("/music", StaticFiles(directory=MUSIC_DIR), name="music")
 
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 else:
+    gemini_client = None
     print("WARNING: GEMINI_API_KEY not set")
 
 # --- Helper Functions ---
@@ -76,8 +77,10 @@ async def generate_quotes(keyword: str, count: int = 3) -> List[str]:
     # Simple direct generation
     prompt = f"Genera {count} frases inspiradoras cortas (máximo 15 palabras) en español sobre el tema: '{keyword}'. Devuélvelas en formato de lista plana, una por línea."
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = await model.generate_content_async(prompt)
+        response = gemini_client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt,
+        )
         text = response.text
         # Clean up list format
         lines = [line.strip().lstrip('- ').lstrip('1. ') for line in text.split('\\n') if line.strip()]

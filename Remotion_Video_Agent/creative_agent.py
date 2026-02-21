@@ -1,7 +1,7 @@
 import os
 import aiohttp
 import asyncio
-import google.generativeai as genai
+from google import genai
 import time
 
 # --- Configuration ---
@@ -13,8 +13,9 @@ KIE_STATUS_URL = "https://api.kie.ai/api/v1/jobs/recordInfo"
 KIE_FILE_UPLOAD_URL = "https://kieai.redpandaai.co/api/file-stream-upload"
 
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 else:
+    gemini_client = None
     print("WARNING: GEMINI_API_KEY not set in creative_agent")
 
 async def generate_visual_prompt(quote: str) -> str:
@@ -32,8 +33,10 @@ async def generate_visual_prompt(quote: str) -> str:
         "Solo devuelve el prompt en inglés, sin explicaciones extras."
     )
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = await model.generate_content_async(prompt)
+        response = gemini_client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt,
+        )
         return response.text.strip()
     except Exception as e:
         print(f"Gemini error generating prompt: {e}")
