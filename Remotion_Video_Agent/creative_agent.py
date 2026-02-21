@@ -34,7 +34,7 @@ async def generate_visual_prompt(quote: str) -> str:
     )
     try:
         response = gemini_client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=prompt,
         )
         return response.text.strip()
@@ -176,7 +176,7 @@ async def process_hybrid_creative_flow(chat_id: int, keyword: str, send_msg_func
         # Step 1: Generate Quotes
         quote_prompt = f"Genera {num_videos} frase inspiradora corta (máximo 15 palabras) en español sobre el tema: '{keyword}'. Devuélvela sola, sin comillas."
         quote_resp = gemini_client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=quote_prompt,
         )
         quotes = [line.strip().lstrip('- ').lstrip('1. ') for line in quote_resp.text.split('\\n') if line.strip()][:num_videos]

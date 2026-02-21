@@ -98,9 +98,9 @@ def submit_to_vizard(api_key: str, youtube_url: str, max_clips: int = None) -> d
     template_id = os.environ.get("VIZARD_TEMPLATE_ID")
     lang = os.environ.get("VIZARD_LANG", "es")
 
-    # Subtitles: Default to 0 (off) per user request
-    # Set VIZARD_SUBTITLES="1" or "true" to enable them
-    subtitles_env = os.environ.get("VIZARD_SUBTITLES", "0")
+    # Subtitles: Default to 1 (on) per user request
+    # Set VIZARD_SUBTITLES="0" or "false" to disable them
+    subtitles_env = os.environ.get("VIZARD_SUBTITLES", "1")
     subtitle_switch = 1 if subtitles_env.lower() in ("1", "true", "on") else 0
 
     payload = {
@@ -275,7 +275,7 @@ def schedule_to_blotato(api_key: str, account_id: str, title: str, video_url: st
                 "caption": description,
             },
         },
-        "useNextFreeSlot": True,
+        "instant": True,
     }
 
     resp = requests.post(
@@ -381,7 +381,7 @@ def process_video(youtube_url: str, chat_id: str, max_clips: int = None):
             f"✅ <b>Shorts are ready!</b>\n\n"
             f"📊 {count} clips generated\n"
             f"🔗 Review in Airtable: {airtable_link}\n\n"
-            f"When you're done reviewing, send <code>done reviewing</code> "
+            f"When you're done reviewing, send <code>dale play</code> "
             f"to schedule approved clips to Blotato."
         )
 
@@ -502,7 +502,7 @@ def telegram_webhook(request: dict) -> dict:
     Unified Telegram webhook handler.
     Routes messages based on content:
       • YouTube URL → Vizard clipping pipeline
-      • "done reviewing" → Blotato scheduling pipeline
+      • "dale play" → Blotato scheduling pipeline
       • /start → help message
     """
     bot_token = os.environ["TELEGRAM_BOT_TOKEN"]
@@ -531,12 +531,12 @@ def telegram_webhook(request: dict) -> dict:
             "  e.g. <code>https://youtube.com/watch?v=...</code>\n"
             "  or <code>5 https://youtube.com/watch?v=...</code> for max 5 clips\n\n"
             "<b>2. Schedule approved clips:</b>\n"
-            "Send <code>done reviewing</code> → approved clips → Blotato → Instagram Reels"
+            "Send <code>dale play</code> → approved clips → Blotato → Instagram Reels"
         )
         return {"ok": True}
 
-    # --- "done reviewing" → Blotato scheduling ---
-    if "done reviewing" in text.lower():
+    # --- "dale play" → Blotato scheduling ---
+    if "dale play" in text.lower():
         send_telegram_message(
             bot_token, chat_id,
             "⏳ <b>On it!</b> Checking Airtable for approved clips..."
@@ -567,7 +567,7 @@ def telegram_webhook(request: dict) -> dict:
         bot_token, chat_id,
         "🤔 I didn't catch that. Here's what I respond to:\n\n"
         "• <b>YouTube URL</b> → generate clips\n"
-        "• <code>done reviewing</code> → schedule approved clips to Blotato (Instagram)\n"
+        "• <code>dale play</code> → schedule approved clips to Blotato (Instagram)\n"
         "• <code>/start</code> → show help"
     )
     return {"ok": True}
@@ -601,7 +601,7 @@ def main():
     print()
     print("This bot handles TWO workflows:")
     print("  • YouTube URL → Vizard clips → Airtable")
-    print("  • 'done reviewing' → Airtable approved → Blotato → Instagram")
+    print("  • 'dale play' → Airtable approved → Blotato → Instagram")
     print()
     print("Next steps:")
     print("1. Run: modal deploy vizard_clipper.py")
@@ -614,4 +614,4 @@ def main():
     print()
     print("Replace <WEBHOOK_URL> with the telegram_webhook URL from step 2.")
     print()
-    print("4. Send a YouTube URL or 'done reviewing' to your bot — done!")
+    print("4. Send a YouTube URL or 'dale play' to your bot — done!")
