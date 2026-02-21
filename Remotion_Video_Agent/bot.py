@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 import requests
 import google.generativeai as genai
 from utils.google_drive import download_file_from_google_drive, download_folder_from_google_drive
+import creative_agent
 
 # --- Configuration ---
 BOT_TOKEN = os.environ.get("SECRET_BOT_TOKEN")
@@ -57,6 +58,19 @@ def send_telegram_video(chat_id, video_path, caption=""):
             print(f"Upload result: {r.status_code} {r.text}")
     except Exception as e:
         print(f"Error sending video: {e}")
+
+def download_telegram_photo(file_id: str, output_path: str):
+    import requests
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
+    resp = requests.get(url)
+    resp.raise_for_status()
+    file_path = resp.json()["result"]["file_path"]
+    
+    download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+    img_resp = requests.get(download_url)
+    img_resp.raise_for_status()
+    with open(output_path, 'wb') as f:
+        f.write(img_resp.content)
         send_telegram_message(chat_id, f"Error subiendo video: {e}")
 
 async def generate_quotes(keyword: str, count: int = 3) -> List[str]:
@@ -231,8 +245,44 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
     message = data.get("message", {})
     text = message.get("text", "")
     chat_id = message.get("chat", {}).get("id")
+    photos = message.get("photo")
     
-    if not text or not chat_id:
+    if not chat_id:
+        return JSONResponse({"status": "ignored"})
+        
+    if photos:
+        # Photo received. Start Image-to-Video Engine.
+        best_photo = photos[-1]
+        file_id = best_photo["file_id"]
+        caption = message.get("caption", "Motivación")
+        
+        timestamp = int(time.time())
+        image_path = os.path.join(VOL_PATH, f"photo_{chat_id}_{timestamp}.jpg")
+        
+        try:
+            download_telegram_photo(file_id, image_path)
+            
+            port = int(os.environ.get("PORT", 8000))
+            local_base_url = f"http://127.0.0.1:{port}"
+            
+            background_tasks.add_task(
+                creative_agent.process_hybrid_creative_flow,
+                chat_id=chat_id,
+                keyword=caption,
+                send_msg_func=send_telegram_message,
+                send_vid_func=send_telegram_video,
+                render_remotion_func=render_remotion_video,
+                vol_path=VOL_PATH,
+                bot_url=local_base_url,
+                music_dir=MUSIC_DIR,
+                image_path=image_path
+            )
+            return JSONResponse({"status": "creative_engine_photo_processing"})
+        except Exception as e:
+            send_telegram_message(chat_id, f"❌ Error descargando foto: {e}")
+            return JSONResponse({"status": "photo_error"})
+    
+    if not text:
         return JSONResponse({"status": "ignored"})
         
     parts = text.split(maxsplit=1)
@@ -243,11 +293,33 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
             "👋 **¡Hola! Soy tu Bot de Inspiración (Remotion v1)**\\n\\n"
             "🎵 **Primero:** Importa tu música enviando:\\n"
             "`/importmusic https://drive.google.com/drive/folders/...`\\n\\n"
-            "🎥 **Luego:** Crea videos enviando un link y una palabra clave:\\n"
-            "`https://drive.google.com/file/d/... Motivación`"
+            "🎥 **Luego:** Crea videos desde Google Drive:\\n"
+            "`https://drive.google.com/file/d/... Motivación`\\n\\n"
+            "✨ **NUEVO (Creative Engine):** Genera un video completamente con IA enviando:\\n"
+            "`/create_ai_video Tu frase motivacional aquí`"
         )
         send_telegram_message(chat_id, welcome_msg)
         return JSONResponse({"status": "welcome_sent"})
+
+    if command == "/create_ai_video" and len(parts) > 1:
+        quote = parts[1]
+        
+        # Local base URL for remotion to access the downloaded BG
+        port = int(os.environ.get("PORT", 8000))
+        local_base_url = f"http://127.0.0.1:{port}"
+        
+        background_tasks.add_task(
+            creative_agent.process_hybrid_creative_flow,
+            chat_id=chat_id,
+            keyword=quote,
+            send_msg_func=send_telegram_message,
+            send_vid_func=send_telegram_video,
+            render_remotion_func=render_remotion_video,
+            vol_path=VOL_PATH,
+            bot_url=local_base_url,
+            music_dir=MUSIC_DIR
+        )
+        return JSONResponse({"status": "creative_engine_processing"})
 
     if command == "/importmusic" and len(parts) > 1:
         url = parts[1]
