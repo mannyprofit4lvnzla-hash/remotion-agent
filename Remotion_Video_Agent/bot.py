@@ -71,7 +71,6 @@ def download_telegram_photo(file_id: str, output_path: str):
     img_resp.raise_for_status()
     with open(output_path, 'wb') as f:
         f.write(img_resp.content)
-        send_telegram_message(chat_id, f"Error subiendo video: {e}")
 
 async def generate_quotes(keyword: str, count: int = 3) -> List[str]:
     # Simple direct generation
