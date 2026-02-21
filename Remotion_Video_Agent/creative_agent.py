@@ -32,7 +32,7 @@ async def generate_visual_prompt(quote: str) -> str:
         "Solo devuelve el prompt en inglés, sin explicaciones extras."
     )
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = await model.generate_content_async(prompt)
         return response.text.strip()
     except Exception as e:
