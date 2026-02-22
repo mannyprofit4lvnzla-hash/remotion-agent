@@ -242,10 +242,10 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         
         try:
             print(f"Rendering video {i+1}...")
-            render_remotion_video(output_path, props)
+            await render_remotion_video(output_path, props)
             
             # Send result
-            send_telegram_video(chat_id, output_path, caption=f"✨ Opción {i+1}\\nUnable: {quote}")
+            send_telegram_video(chat_id, output_path, caption=f"✨ Opción {i+1}\\nFrase: {quote}")
             
         except Exception as e:
             print(f"Render failed for {i+1}: {e}")
