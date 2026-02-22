@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     libpangocairo-1.0-0 \
     libxss1 \
     libgtk-3-0 \
+    dbus-x11 \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Install Node.js 20

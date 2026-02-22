@@ -113,6 +113,7 @@ def render_remotion_video(output_path, props):
         f"--props={props_json}",
         "--chromium-disable-web-security",
         "--chromium-ignore-certificate-errors",
+        "--allow-file-access-from-files",
         "--chromium-disable-audio-output", 
         "--chromium-disable-software-rasterizer",
         "--log=verbose"
@@ -188,7 +189,7 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         else:
             selected_musics = [random.choice(music_files) for _ in range(3)]
 
-    # 3. Render Loop
+        # 3. Render Loop
     send_telegram_message(chat_id, "3. Renderizando 3 videos (esto tomará un momento)...")
     
     for i in range(3):
@@ -205,10 +206,6 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         if music_path:
             music_dur = get_video_duration(music_path)
             music_start = random.uniform(0, max(0, music_dur - 10))
-            
-            # COPY music to common accessible path if needed?
-            # Remotion runs locally, so absolute path should work if Docker allows.
-            # Convert to absolute path just in case
             music_path = os.path.abspath(music_path)
         
         import shutil
@@ -218,17 +215,18 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
         output_path = os.path.join(VOL_PATH, output_filename)
         
-        # Copy files to Remotion's public folder to bypass Chromium cross-origin and file:// security blocks
+        # We copy files just in case, but reference them with absolute file:// paths
         video_filename = os.path.basename(source_video_path)
-        shutil.copy(source_video_path, os.path.join(remotion_public_dir, video_filename))
-        video_local_url = video_filename
+        copied_video_path = os.path.join(remotion_public_dir, video_filename)
+        shutil.copy(source_video_path, copied_video_path)
+        video_local_url = f"file://{copied_video_path}"
         
         music_local_url = ""
         if music_path:
             music_filename = os.path.basename(music_path)
-            # Copy to public folder
-            shutil.copy(music_path, os.path.join(remotion_public_dir, music_filename))
-            music_local_url = music_filename
+            copied_music_path = os.path.join(remotion_public_dir, music_filename)
+            shutil.copy(music_path, copied_music_path)
+            music_local_url = f"file://{copied_music_path}"
         
         props = {
             "videoUrl": video_local_url,
