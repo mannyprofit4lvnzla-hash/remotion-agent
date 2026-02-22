@@ -288,7 +288,7 @@ async def process_hybrid_creative_flow(
             }
             
             try:
-                await loop.run_in_executor(None, render_remotion_func, output_path, props)
+                await render_remotion_func(output_path, props)
                 send_vid_func(chat_id, output_path, caption=f"✨ Video IA Completado\\nFrase: {quotes[i]}")
             except Exception as render_err:
                 print(f"Render failed for {i+1}: {render_err}")

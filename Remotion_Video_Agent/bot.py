@@ -97,12 +97,13 @@ def get_video_duration(path):
     except:
         return 60.0 # Fallback
 
-def render_remotion_video(output_path, props):
+async def render_remotion_video(output_path, props):
     # npx remotion render src/index.ts MyComposition out/video.mp4 --props='{...}'
     # We are in /app, remotion is in /app/remotion
     # cmd needs to run inside /app/remotion or point to it
     
     import json
+    import asyncio
     props_json = json.dumps(props)
     
     cmd = [
@@ -125,13 +126,18 @@ def render_remotion_video(output_path, props):
         cmd.append(f"--browser-executable={browser_executable}")
     
     print(f"Executing Remotion: {' '.join(cmd)}")
-    result = subprocess.run(
-        cmd,
-        cwd=os.path.join(os.getcwd(), "remotion"), # Run inside remotion dir
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
-    )
+    
+    def run_subproc():
+        return subprocess.run(
+            cmd,
+            cwd=os.path.join(os.getcwd(), "remotion"), # Run inside remotion dir
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+    
+    loop = asyncio.get_running_loop()
+    result = await loop.run_in_executor(None, run_subproc)
     
     if result.returncode != 0:
         full_error = f"STDOUT: {result.stdout}\nSTDERR: {result.stderr}"
