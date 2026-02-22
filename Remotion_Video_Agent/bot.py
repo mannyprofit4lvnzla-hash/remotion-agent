@@ -212,6 +212,9 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
         # We can serve it directly from the FastAPI mounted static files:
         # /tmp -> VOL_PATH
         # /music -> MUSIC_DIR
+        output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
+        output_path = os.path.join(VOL_PATH, output_filename)
+        
         port = int(os.environ.get("PORT", 8000))
         local_base_url = f"http://127.0.0.1:{port}"
         
