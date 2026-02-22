@@ -181,7 +181,7 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
     
     music_files = []
     for ext in ("*.mp3", "*.wav", "*.m4a", "*.aac", "*.flac"):
-        music_files.extend(glob.glob(os.path.join(MUSIC_DIR, ext)))
+        music_files.extend(glob.glob(os.path.join(MUSIC_DIR, "**", ext), recursive=True))
         
     if not music_files:
         print("No music files found! Please add audio files to music/ directory.")

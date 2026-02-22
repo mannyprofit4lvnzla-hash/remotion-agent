@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y chromium \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a wrapper for Chromium to force flags
-run printf '#!/bin/bash\nexec /usr/bin/chromium --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --disable-setuid-sandbox "$@"' > /usr/bin/chromium-wrapper && \
+RUN printf '#!/bin/bash\nexec /usr/bin/chromium --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --disable-setuid-sandbox --mute-audio --alsa-output-device=plug:null "--disable-features=AudioServiceOutOfProcess" "$@"' > /usr/bin/chromium-wrapper && \
     chmod +x /usr/bin/chromium-wrapper
 
 # Set env var so Remotion uses our wrapper
