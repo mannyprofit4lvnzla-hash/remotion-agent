@@ -113,7 +113,6 @@ def render_remotion_video(output_path, props):
         f"--props={props_json}",
         "--chromium-disable-web-security",
         "--chromium-ignore-certificate-errors",
-        "--allow-file-access-from-files",
         "--chromium-disable-audio-output",
         "--disable-features=AudioServiceOutOfProcess",
         "--chromium-disable-software-rasterizer",
@@ -209,25 +208,20 @@ async def process_video_flow(chat_id: int, drive_url: str, keyword: str):
             music_start = random.uniform(0, max(0, music_dur - 10))
             music_path = os.path.abspath(music_path)
         
-        import shutil
-        remotion_public_dir = os.path.join(os.getcwd(), "remotion", "public")
-        os.makedirs(remotion_public_dir, exist_ok=True)
+        # We don't need to copy to remotion_public_dir anymore! 
+        # We can serve it directly from the FastAPI mounted static files:
+        # /tmp -> VOL_PATH
+        # /music -> MUSIC_DIR
+        port = int(os.environ.get("PORT", 8000))
+        local_base_url = f"http://127.0.0.1:{port}"
         
-        output_filename = f"output_{chat_id}_{timestamp}_{i+1}.mp4"
-        output_path = os.path.join(VOL_PATH, output_filename)
-        
-        # We copy files just in case, but reference them with absolute file:// paths
         video_filename = os.path.basename(source_video_path)
-        copied_video_path = os.path.join(remotion_public_dir, video_filename)
-        shutil.copy(source_video_path, copied_video_path)
-        video_local_url = f"file://{copied_video_path}"
+        video_local_url = f"{local_base_url}/tmp/{video_filename}"
         
         music_local_url = ""
         if music_path:
             music_filename = os.path.basename(music_path)
-            copied_music_path = os.path.join(remotion_public_dir, music_filename)
-            shutil.copy(music_path, copied_music_path)
-            music_local_url = f"file://{copied_music_path}"
+            music_local_url = f"{local_base_url}/music/{music_filename}"
         
         props = {
             "videoUrl": video_local_url,

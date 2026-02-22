@@ -259,17 +259,17 @@ async def process_hybrid_creative_flow(
             output_filename = f"creative_out_{chat_id}_{timestamp}_{i+1}.mp4"
             output_path = os.path.join(vol_path, output_filename)
             
-            import shutil
-            remotion_public_dir = os.path.join(os.getcwd(), "remotion", "public")
-            os.makedirs(remotion_public_dir, exist_ok=True)
+            # We don't need to copy to remotion_public_dir anymore! 
+            # We can serve it directly from the FastAPI mounted static files:
+            port = int(os.environ.get("PORT", 8000))
+            local_base_url = f"http://127.0.0.1:{port}"
             
-            # Prepare Background Video URL securely avoiding HTTP
+            # Prepare Background Video URL via FastAPI loopback (/tmp)
             video_filename = os.path.basename(bg_video_paths[i])
-            shutil.copy(bg_video_paths[i], os.path.join(remotion_public_dir, video_filename))
-            video_local_url = video_filename
+            video_local_url = f"{local_base_url}/tmp/{video_filename}"
             video_start = 0 
             
-            # Prepare Music URL & Random Start securely avoiding HTTP
+            # Prepare Music URL & Random Start via FastAPI loopback (/music)
             music_path = selected_musics[i]
             music_local_url = ""
             music_start = 0
@@ -277,8 +277,7 @@ async def process_hybrid_creative_flow(
                 music_dur = get_video_duration(music_path)
                 music_start = random.uniform(0, max(0, music_dur - 10))
                 music_filename = os.path.basename(music_path)
-                shutil.copy(music_path, os.path.join(remotion_public_dir, music_filename))
-                music_local_url = music_filename
+                music_local_url = f"{local_base_url}/music/{music_filename}"
             
             props = {
                 "videoUrl": video_local_url,
