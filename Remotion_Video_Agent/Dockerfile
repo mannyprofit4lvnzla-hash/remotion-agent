@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y \
     dbus-x11 \
     && rm -rf /var/lib/apt/lists/*
 
+# Fix ALSA "Unknown PCM default" crashes in headless Chromium
+RUN printf "pcm.!default {\n    type null\n}\n" > /etc/asound.conf
+
 # 2. Install Node.js 20
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
