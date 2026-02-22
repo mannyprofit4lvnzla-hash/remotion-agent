@@ -23,7 +23,7 @@ if WEBHOOK_URL and not WEBHOOK_URL.startswith("http"):
     WEBHOOK_URL = f"https://{WEBHOOK_URL}"
     
 VOL_PATH = "/tmp" # Working directory for downloads/renders
-MUSIC_DIR = os.path.join(os.getcwd(), "music")
+MUSIC_DIR = os.path.join(VOL_PATH, "music")
 if not os.path.exists(MUSIC_DIR):
     os.makedirs(MUSIC_DIR)
 
@@ -114,7 +114,8 @@ def render_remotion_video(output_path, props):
         "--chromium-disable-web-security",
         "--chromium-ignore-certificate-errors",
         "--allow-file-access-from-files",
-        "--chromium-disable-audio-output", 
+        "--chromium-disable-audio-output",
+        "--disable-features=AudioServiceOutOfProcess",
         "--chromium-disable-software-rasterizer",
         "--log=verbose"
     ]
