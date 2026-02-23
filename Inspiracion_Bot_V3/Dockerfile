@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Fix ImageMagick security policy to allow reading/writing text via MoviePy
+# Fix ImageMagick security policy to allow reading/writing text via MoviePy (Crucial for TextClip)
+RUN sed -i '/<policy domain="path" rights="none" pattern="@\*"/d' /etc/ImageMagick-6/policy.xml || true
 RUN sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/g' /etc/ImageMagick-6/policy.xml || true
 RUN sed -i 's/rights="none" pattern="LABEL"/rights="read|write" pattern="LABEL"/g' /etc/ImageMagick-6/policy.xml || true
-RUN sed -i 's/rights="none" pattern="@*"/rights="read|write" pattern="@*"/g' /etc/ImageMagick-6/policy.xml || true
 
 WORKDIR /app
 
