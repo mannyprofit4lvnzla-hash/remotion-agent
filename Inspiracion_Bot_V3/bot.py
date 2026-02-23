@@ -100,6 +100,15 @@ async def handle_video_link(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if "drive.google.com" not in url and "youtube.com" not in url and "youtu.be" not in url:
         return # Ignore random text
         
+    if "drive/folders/" in url:
+        await update.message.reply_markdown(
+            "❌ **¡Atención! Me enviaste un enlace de CARPETA.**\n\n"
+            "🎵 Si lo que quieres es **importar música**, debes escribir el comando antes:\n"
+            f"`/importmusic {url}`\n\n"
+            "🎥 Si quieres **crear un video**, el enlace debe ser directo a un **archivo de video** específico, no a una carpeta."
+        )
+        return
+        
     await update.message.reply_text(f"🚀 Iniciando proceso para '{keyword}'...\n1. Descargando video fuente...")
     
     timestamp = int(time.time())
