@@ -2,5 +2,5 @@ python-telegram-bot==20.8
 moviepy==1.0.3
 yt-dlp
 gdown
-google-generativeai
+google-genai
 Pillow
