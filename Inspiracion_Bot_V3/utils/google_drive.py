@@ -29,7 +29,32 @@ def download_folder_from_google_drive(url: str, output_dir: str):
         os.makedirs(output_dir)
         
     print(f"Downloading folder from {url} to {output_dir}")
-    # gdown download_folder handles public folder links
-    # fuzzy=True helps with extracting ID from messy URLs
-    gdown.download_folder(url, output=output_dir, quiet=False, use_cookies=False)
+    
+    gdown_failed = False
+    try:
+        gdown.download_folder(url, output=output_dir, quiet=False, use_cookies=False)
+        if len(os.listdir(output_dir)) == 0:
+            print("gdown returned correctly but 0 files were downloaded. Triggering fallback.")
+            gdown_failed = True
+    except Exception as e:
+        print(f"gdown folder download exception: {e}")
+        gdown_failed = True
+        
+    if gdown_failed:
+        print("Falling back to yt-dlp for Google Drive folder scraping...")
+        import subprocess
+        # yt-dlp natively supports Google Drive folders. We force audio extraction.
+        cmd = [
+            "yt-dlp",
+            "--extract-audio",
+            "--audio-format", "mp3",
+            "--yes-playlist",
+            "-o", f"{output_dir}/%(title)s.%(ext)s",
+            url
+        ]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode != 0:
+            print(f"yt-dlp stdout: {result.stdout}")
+            print(f"yt-dlp stderr: {result.stderr}")
+            raise Exception(f"Both gdown and yt-dlp failed to download the folder. yt-dlp error: {result.stderr}")
  
